@@ -1,0 +1,23 @@
+sudo : required
+services:
+    - docker
+
+before_install:
+    - docker build -t ipsagar/react-test -f ./client/dockerfile.dev ./client
+
+script:
+    - docker run ipsagar/react-test npm test -- --coverage
+
+after_success:
+    - docker build -t ipsagar/multi-client ./client
+    - docker build -t ipsagar/multi-nginx ./nginx
+    - docker build -t ipsagar/multi-server ./server
+    - docker build -t ipsagar/multi-worker ./worker
+
+    #Login to DockerHub
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    #Push to DockerHub
+    - docker push ipsagar/multi-client
+    - docker push ipsagar/multi-nginx
+    - docker push ipsagar/multi-server
+    - docker push ipsagar/multi-worker
